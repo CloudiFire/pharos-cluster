@@ -3,13 +3,32 @@
 module Pharos
   module Host
     class Configurer
-      attr_reader :host, :ssh
+      attr_reader :host, :ssh, :config
 
       SCRIPT_LIBRARY = File.join(__dir__, '..', 'scripts', 'pharos.sh').freeze
 
-      def initialize(host, ssh)
+      def self.load_configurers
+        Dir.glob(File.join(__dir__, '**', '*.rb')).each { |f| require(f) }
+      end
+
+      # @return [Array]
+      def self.configurers
+        @configurers ||= []
+      end
+
+      # @param [Pharos::Configuration::OsRelease]
+      # @return [Class<Configurer>, NilClass]
+      def self.for_os_release(os_release)
+        configurers.find { |configurer| configurer.supported_os?(os_release) }
+      end
+
+      # @param host [Pharos::Configuration::Host]
+      # @param ssh [NilClass,Pharos::SSH::Client]
+      # @param config [NilClass,Pharos::Config]
+      def initialize(host, ssh = nil, config = nil)
         @host = host
         @ssh = ssh
+        @config = config
       end
 
       def install_essentials
@@ -63,7 +82,7 @@ module Pharos
       # @param path [Array]
       # @return [String]
       def script_path(*path)
-        File.join(__dir__, self.class.os_name, 'scripts', *path)
+        File.join(__dir__, host.os_release.id, 'scripts', *path)
       end
 
       # @return [String]
@@ -105,16 +124,11 @@ module Pharos
       # @return [String]
       def insecure_registries
         if crio?
-          cluster_config.container_runtime.insecure_registries.map(&:inspect).join(",").inspect
+          config.container_runtime.insecure_registries.map(&:inspect).join(",").inspect
         else
           # docker & custom docker
-          JSON.dump(cluster_config.container_runtime.insecure_registries).inspect
+          JSON.dump(config.container_runtime.insecure_registries).inspect
         end
-      end
-
-      # @return [Pharos::Config,NilClass]
-      def cluster_config
-        self.class.cluster_config
       end
 
       # @return [Pharos::SSH::File]
@@ -147,36 +161,28 @@ module Pharos
       end
 
       class << self
-        attr_reader :os_name, :os_version
-        attr_accessor :cluster_config
-
         # @param component [Hash]
         def register_component(component)
-          component[:os_release] = Pharos::Configuration::OsRelease.new(id: os_name, version: os_version)
-          Pharos::Phases.register_component(component)
+          supported_os_releases.each do |os|
+            Pharos::Phases.register_component(component.merge(os_release: os))
+          end
         end
 
-        def register_config(name, version)
-          @os_name = name
-          @os_version = version
-          configs << self
-          self
+        # @return [Array<Pharos::Configuration::OsRelease>]
+        def supported_os_releases
+          @supported_os_releases ||= []
         end
 
         # @param [Pharos::Configuration::OsRelease]
         # @return [Boolean]
         def supported_os?(os_release)
-          os_name == os_release.id && os_version == os_release.version
+          supported_os_releases.any? { |release| release.id == os_release.id && release.version == os_release.version }
         end
 
-        # @param [Pharos::Configuration::OsRelease]
-        # @return [Class<Configurer>, NilClass]
-        def config_for_os_release(os_release)
-          configs.find { |config| config.supported_os?(os_release) }
-        end
-
-        def configs
-          @@configs ||= [] # rubocop:disable Style/ClassVars
+        def register_config(name, version)
+          supported_os_releases << Pharos::Configuration::OsRelease.new(id: name, version: version)
+          Pharos::Host::Configurer.configurers << self
+          self
         end
       end
 

@@ -23,7 +23,7 @@ describe Pharos::Host::UbuntuXenial do
 
     context 'cri-o' do
       it 'configures cri-o' do
-        allow(subject).to receive(:cluster_config).and_return(cluster_config)
+        allow(subject).to receive(:config).and_return(cluster_config)
         allow(subject).to receive(:insecure_registries)
         allow(subject).to receive(:docker?).and_return(false)
         allow(subject).to receive(:crio?).and_return(true)

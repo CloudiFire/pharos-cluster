@@ -73,7 +73,7 @@ module Pharos
 
     # @return [Pharos::Host::Configurer]
     def host_configurer
-      @host.configurer(@ssh)
+      @host_configurer ||= @host.configurer(@ssh, @config)
     end
 
     # @return [Pharos::SSH::Client]

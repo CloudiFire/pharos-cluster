@@ -107,7 +107,7 @@ module Pharos
           args << "--hostname-override=#{hostname}"
         end
 
-        args += configurer(nil).kubelet_args
+        args += configurer.kubelet_args
 
         args
       end
@@ -164,10 +164,11 @@ module Pharos
         routes.select{ |route| route.overlaps? cidr }
       end
 
-      # @param ssh [Pharos::SSH::Client]
-      def configurer(ssh)
-        configurer = Pharos::Host::Configurer.config_for_os_release(os_release)
-        configurer&.new(self, ssh)
+      # @param ssh [NilClass,Pharos::SSH::Client]
+      # @param config [NilClass,Pharos::Config]
+      # @return [NilClass,Pharos::Host::Configurer::*]
+      def configurer(ssh = nil, config = nil)
+        Pharos::Host::Configurer.for_os_release(os_release)&.new(self, ssh, config)
       end
 
       # @param bastion [Pharos::Configuration::Bastion]
