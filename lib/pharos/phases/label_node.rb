@@ -6,6 +6,10 @@ module Pharos
       title "Label nodes"
 
       def call
+        mutex.synchronize { perform }
+      end
+
+      def perform
         unless @host.labels || @host.taints
           logger.info { "No labels or taints set ... " }
           return
