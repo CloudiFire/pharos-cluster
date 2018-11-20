@@ -99,9 +99,11 @@ module Pharos
         apply_phase(Phases::ConfigureEtcd, etcd_hosts)
       end
 
-      apply_phase(Phases::ConfigureSecretsEncryption, master_hosts)
-      apply_phase(Phases::SetupMaster, master_hosts)
-      apply_phase(Phases::UpgradeMaster, master_hosts, master: master_hosts.first) # requires optional early ConfigureClient
+      apply_phase(Phases::ValidateSecretsEncryption, master_hosts, ssh: true)
+      apply_phase(Phases::GenerateSecretsEncryptionKeys, ['localhost'], ssh: false) unless context['secrets_encryption']
+      apply_phase(Phases::ConfigureSecretsEncryption, master_hosts, ssh: true)
+      apply_phase(Phases::SetupMaster, master_hosts, ssh: true)
+      apply_phase(Phases::UpgradeMaster, master_hosts, ssh: true, master: master_hosts.first) # requires optional early ConfigureClient
 
       apply_phase(Phases::MigrateWorker, config.worker_hosts)
       apply_phase(Phases::ConfigureKubelet, config.hosts)
