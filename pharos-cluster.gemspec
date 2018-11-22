@@ -3,7 +3,7 @@ lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "pharos/version"
 
-files = Dir['README.md', 'LICENSE', 'licenses/*', 'bin/*', 'lib/**/*', 'addons/**/*']
+files = Dir['README.md', 'LICENSE', 'licenses/*', 'bin/*', 'lib/**/*', 'addons/**/*', 'data/**/*']
 require_paths = ['lib']
 if ENV['PHAROS_NON_OSS'] == 'true'
   files += Dir['non-oss/**/*']
@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "net-ssh", "5.0.2"
   spec.add_runtime_dependency "net-ssh-gateway", "2.0.0"
   spec.add_runtime_dependency "ed25519", "1.2.4"
+  spec.add_runtime_dependency "bcrypt"
   spec.add_runtime_dependency "bcrypt_pbkdf", ">= 1.0", "< 2.0"
   spec.add_runtime_dependency "dry-types", "0.13.2"
   spec.add_runtime_dependency "dry-validation", "0.12.1"
