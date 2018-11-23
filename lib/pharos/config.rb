@@ -61,6 +61,7 @@ module Pharos
     def dns_replicas
       return network.dns_replicas if network.dns_replicas
       return 1 if hosts.length == 1
+
       1 + (hosts.length / HOSTS_PER_DNS_REPLICA.to_f).ceil
     end
 
@@ -112,6 +113,7 @@ module Pharos
     # @raise [Pharos::ConfigError]
     def set(key, value)
       raise Pharos::Error, "Cannot override #{key}." if data[key.to_s]
+
       attributes[key] = value
     end
 

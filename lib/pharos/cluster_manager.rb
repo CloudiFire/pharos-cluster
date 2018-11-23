@@ -122,7 +122,7 @@ module Pharos
       apply_phase(Phases::ConfigureBootstrap, [master_hosts.first]) # using `kubeadm token`, not the kube API
 
       apply_phase(Phases::JoinNode, config.worker_hosts)
-      apply_phase(Phases::LabelNode, config.hosts, master: master_hosts.first)
+      apply_phase(Phases::LabelNode, [master_hosts.first], master: master_hosts.first)
 
       # configure services that need workers
       apply_phase(Phases::ConfigureMetrics, [master_hosts.first], master: master_hosts.first)

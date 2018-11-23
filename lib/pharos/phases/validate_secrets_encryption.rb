@@ -12,6 +12,7 @@ module Pharos
       def call
         mutex.synchronize do
           return if cluster_context['secrets_encryption']
+
           if existing_keys_valid?
             cluster_context['secrets_encryption'] = existing_content
           end
@@ -38,11 +39,11 @@ module Pharos
         logger.debug { "Validating existing encryption keys ..." }
         config = Pharos::YamlFile.new(StringIO.new(content)).load
 
-        keys = {}
         config['resources'].each do |resource|
           resource['providers'].each do |provider|
             next unless provider['aescbc']
-            if provider['aescbc'].fetch('keys', []).size > 0
+
+            if !provider['aescbc'].fetch('keys', []).empty?
               logger.debug { "Reusing existing encryption keys ..." }
               return true
             end
@@ -53,4 +54,3 @@ module Pharos
     end
   end
 end
-
