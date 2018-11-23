@@ -1,7 +1,7 @@
 require 'recursive-open-struct'
 
 describe Pharos::Host::Configurer do
-  let!(:test_config_class) do
+  let(:test_config_class) do
     Class.new(described_class) do
       register_config 'test', '1.0.0'
       register_config 'test', '1.1.0'
@@ -9,52 +9,50 @@ describe Pharos::Host::Configurer do
   end
 
   let(:host) { double(:host) }
-  let(:ssh) { instance_double(Pharos::SSH::Client) }
-  let(:subject) { described_class.new(host, ssh) }
 
   before do
-    Pharos::Host::Configurer.load_configurers
+    Pharos::Host::Configurer.configurers.delete_if { |c| c.supported_os_releases&.first&.id == 'test' }
+    test_config_class
   end
 
+  after do
+    Pharos::Host::Configurer.configurers.delete_if { |c| c == test_config_class }
+  end
+
+  subject { described_class.new(host) }
+
   describe '#register_config' do
-    it 'sets os_name and os_version' do
-      expect(test_config_class.supported_os_releases.first.id).to eq('test')
-      expect(test_config_class.supported_os_releases.first.version).to eq('1.1.0')
-    end
-
     it 'registers multiple versions to configs' do
-      expect(
-        described_class.config_for_os_release(
-          Pharos::Configuration::OsRelease.new(id: 'test', version: '1.0.0')
-        )
-      ).not_to be_nil
-      expect(
-        described_class.config_for_os_release(
-          Pharos::Configuration::OsRelease.new(id: 'test', version: '1.1.0')
-        )
-      ).not_to be_nil
-    end
-
-    it 'registers config class' do
-      expect(described_class.configurers.include?(test_config_class)).to be_truthy
+      expect(test_config_class.supported_os_releases.first.version).to eq('1.0.0')
+      expect(test_config_class.supported_os_releases.first.id).to eq('test')
+      expect(test_config_class.supported_os_releases.last.version).to eq('1.1.0')
+      expect(test_config_class.supported_os_releases.last.id).to eq('test')
     end
   end
 
   describe '#supported_os?' do
-    it 'returns true if supported' do
+    it 'supports multiple versions' do
       expect(
-        test_config_class.supported_os?(
-          double(:os_release, id: 'test', version: '1.1.0')
+        described_class.for_os_release(
+          Pharos::Configuration::OsRelease.new(id: 'test', version: '1.0.0')
+        ).new(host)
+      ).to be_a test_config_class
+
+      expect(
+        described_class.for_os_release(
+          Pharos::Configuration::OsRelease.new(id: 'test', version: '1.1.0')
+        ).new(host)
+      ).to be_a test_config_class
+
+      expect(
+        described_class.for_os_release(
+          Pharos::Configuration::OsRelease.new(id: 'test', version: '1.2.0')
         )
-      ).to be_truthy
+      ).to be_nil
     end
 
-    it 'returns false if not supported' do
-      expect(
-        test_config_class.supported_os?(
-          double(:os_release, id: 'test', version: '1.2.0')
-        )
-      ).to be_falsey
+    it 'registers config class' do
+      expect(described_class.configurers.include?(test_config_class)).to be_truthy
     end
   end
 
@@ -64,9 +62,10 @@ describe Pharos::Host::Configurer do
     let(:file) { instance_double(Pharos::SSH::RemoteFile) }
     let(:host_env_content) { "PATH=/bin:/usr/local/bin\n" }
 
-    subject { described_class.new(host, ssh) }
+    subject { described_class.new(host) }
 
     before do
+      allow(host).to receive(:ssh).and_return(ssh)
       allow(ssh).to receive(:file).with('/etc/environment').and_return(file)
       allow(ssh).to receive(:disconnect)
       allow(ssh).to receive(:connect)
@@ -104,7 +103,6 @@ describe Pharos::Host::Configurer do
   end
 
   describe '#insecure_registries' do
-
     context 'for docker' do
       before do
         allow(host).to receive(:crio?).and_return(false)
@@ -166,6 +164,5 @@ describe Pharos::Host::Configurer do
         expect(subject.insecure_registries).to eq("\"\"")
       end
     end
-
   end
 end

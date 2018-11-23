@@ -3,7 +3,7 @@
 module Pharos
   module Host
     class Configurer
-      attr_reader :host, :ssh, :config
+      attr_reader :host
 
       SCRIPT_LIBRARY = File.join(__dir__, '..', 'scripts', 'pharos.sh').freeze
 
@@ -22,13 +22,16 @@ module Pharos
         configurers.find { |configurer| configurer.supported_os?(os_release) }
       end
 
-      # @param host [Pharos::Configuration::Host]
-      # @param ssh [NilClass,Pharos::SSH::Client]
-      # @param config [NilClass,Pharos::Config]
-      def initialize(host, ssh = nil, config = nil)
+      def initialize(host)
         @host = host
-        @ssh = ssh
-        @config = config
+      end
+
+      def config
+        host.config
+      end
+
+      def ssh
+        host.ssh
       end
 
       def install_essentials
@@ -91,15 +94,15 @@ module Pharos
       end
 
       def configure_script_library
-        @ssh.exec("sudo mkdir -p #{script_library_install_path}")
-        @ssh.file("#{script_library_install_path}/util.sh").write(
+        ssh.exec("sudo mkdir -p #{script_library_install_path}")
+        ssh.file("#{script_library_install_path}/util.sh").write(
           File.read(SCRIPT_LIBRARY)
         )
       end
 
       # @param script [String] name of file under ../scripts/
       def exec_script(script, vars = {})
-        @ssh.exec_script!(
+        ssh.exec_script!(
           script,
           env: vars,
           path: script_path(script)
@@ -107,15 +110,15 @@ module Pharos
       end
 
       def crio?
-        @host.crio?
+        host.crio?
       end
 
       def docker?
-        @host.docker?
+        host.docker?
       end
 
       def custom_docker?
-        @host.custom_docker?
+        host.custom_docker?
       end
 
       # Return stringified json array(ish) for insecure registries properly escaped for safe
@@ -133,11 +136,11 @@ module Pharos
 
       # @return [Pharos::SSH::File]
       def env_file
-        @ssh.file('/etc/environment')
+        ssh.file('/etc/environment')
       end
 
       def update_env_file
-        return if @host.environment.nil? || @host.environment.empty?
+        return if host.environment.nil? || host.environment.empty?
 
         host_env_file = env_file
         original_data = {}
@@ -151,13 +154,13 @@ module Pharos
           end
         end
 
-        new_content = @host.environment.merge(original_data) { |_key, old_val, _new_val| old_val }.compact.map do |key, val|
+        new_content = host.environment.merge(original_data) { |_key, old_val, _new_val| old_val }.compact.map do |key, val|
           "#{key}=#{val}"
         end.join("\n")
         new_content << "\n" unless new_content.end_with?("\n")
 
         host_env_file.write(new_content)
-        @ssh.disconnect; @ssh.connect # reconnect to reread env
+        ssh.disconnect; ssh.connect # reconnect to reread env
       end
 
       class << self

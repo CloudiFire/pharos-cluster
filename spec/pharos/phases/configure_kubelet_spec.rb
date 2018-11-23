@@ -25,6 +25,10 @@ describe Pharos::Phases::ConfigureKubelet do
 
   subject { described_class.new(host, config: config) }
 
+  before(:all) do
+    Pharos::Host::Configurer.load_configurers
+  end
+
   before(:each) do
     host.resolvconf = host_resolvconf
 
