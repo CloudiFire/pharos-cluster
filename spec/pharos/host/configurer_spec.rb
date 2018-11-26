@@ -12,6 +12,12 @@ describe Pharos::Host::Configurer do
   let(:ssh) { instance_double(Pharos::SSH::Client) }
   let(:subject) { described_class.new(host, ssh) }
 
+  let(:configurers) { [] }
+
+  before do
+    allow(test_config_class).to receive(:configs).and_return(configurers)
+  end
+
   describe '#register_config' do
     it 'sets os_name and os_version' do
       expect(test_config_class.os_name).to eq('test')
