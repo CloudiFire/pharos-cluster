@@ -177,10 +177,9 @@ module Pharos
         routes.select{ |route| route.overlaps? cidr }
       end
 
-      # @param ssh [Pharos::SSH::Client]
-      def configurer(ssh)
+      def configurer
         configurer = Pharos::Host::Configurer.config_for_os_release(os_release)
-        configurer&.new(self, ssh)
+        configurer&.new(self)
       end
 
       # @param bastion [Pharos::Configuration::Bastion]

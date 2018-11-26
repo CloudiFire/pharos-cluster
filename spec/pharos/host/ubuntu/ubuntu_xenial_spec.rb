@@ -9,7 +9,11 @@ describe Pharos::Host::UbuntuXenial do
   end
   let(:ssh) { double(:ssh) }
   let(:cluster_config) { double(:cluster_config, image_repository: 'quay.io/kontena') }
-  let(:subject) { described_class.new(host, ssh) }
+  let(:subject) { described_class.new(host) }
+
+  before do
+    allow(host).to receive(:ssh).and_return(ssh)
+  end
 
   describe '#configure_container_runtime' do
     context 'docker' do

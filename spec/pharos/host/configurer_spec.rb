@@ -10,11 +10,12 @@ describe Pharos::Host::Configurer do
 
   let(:host) { double(:host) }
   let(:ssh) { instance_double(Pharos::SSH::Client) }
-  let(:subject) { described_class.new(host, ssh) }
+  let(:subject) { described_class.new(host) }
 
   let(:configurers) { [] }
 
   before do
+    allow(host).to receive(:ssh).and_return(ssh)
     allow(test_config_class).to receive(:configs).and_return(configurers)
   end
 
@@ -67,7 +68,7 @@ describe Pharos::Host::Configurer do
     let(:file) { instance_double(Pharos::SSH::RemoteFile) }
     let(:host_env_content) { "PATH=/bin:/usr/local/bin\n" }
 
-    subject { described_class.new(host, ssh) }
+    subject { described_class.new(host) }
 
     before do
       allow(ssh).to receive(:file).with('/etc/environment').and_return(file)
