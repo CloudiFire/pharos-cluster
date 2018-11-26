@@ -12,6 +12,7 @@ module Pharos
       def call
         logger.info { "Writing secrets encryption configuration ..." }
         ssh.exec!("test -d #{SECRETS_CFG_DIR} || sudo install -m 0700 -d #{SECRETS_CFG_DIR}")
+        cfg_file = ssh.file(SECRETS_CFG_FILE)
         cfg_file.write(cluster_context['secrets_encryption'])
         cfg_file.chmod('0700')
       end
