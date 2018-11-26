@@ -23,7 +23,7 @@ module Pharos
       def existing_content
         return @existing_content if @existing_content
 
-        file = @ssh.file(SECRETS_CFG_FILE)
+        file = ssh.file(SECRETS_CFG_FILE)
         return nil unless file.exist?
 
         @existing_content = file.read

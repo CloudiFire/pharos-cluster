@@ -1,11 +1,11 @@
 require "pharos/phases/validate_secrets_encryption"
 
 describe Pharos::Phases::ValidateSecretsEncryption do
-  let(:master) { Pharos::Configuration::Host.new(address: 'test', private_address: 'private', role: 'master') }
   let(:config_hosts_count) { 1 }
+  let(:host) { Pharos::Configuration::Host.new(role: 'master', address: 'test', private_address: 'private' ) }
 
   let(:config) { Pharos::Config.new(
-    hosts: (1..config_hosts_count).map { |i| Pharos::Configuration::Host.new(role: 'worker') },
+    hosts: [host],
     network: {
       service_cidr: '1.2.3.4/16',
       pod_network_cidr: '10.0.0.0/16'
@@ -15,7 +15,11 @@ describe Pharos::Phases::ValidateSecretsEncryption do
   ) }
 
   let(:ssh) { instance_double(Pharos::SSH::Client) }
-  subject { described_class.new(master, config: config, ssh: ssh) }
+  subject { described_class.new(host, config: config) }
+
+  before do
+    allow(host).to receive(:ssh).and_return(ssh)
+  end
 
   describe '#existing_keys_valid?' do
     let(:file) { instance_double(Pharos::SSH::RemoteFile) }
