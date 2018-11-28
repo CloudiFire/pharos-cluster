@@ -39,7 +39,8 @@ module Pharos
           },
           'apiServerExtraArgs' => {},
           'controllerManagerExtraArgs' => {
-            'horizontal-pod-autoscaler-use-rest-clients' => 'true'
+            'horizontal-pod-autoscaler-use-rest-clients' => 'true',
+            'controllers' => '*,bootstrapsigner,tokencleaner,-route'
           }
         }
 
