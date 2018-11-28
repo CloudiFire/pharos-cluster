@@ -8,4 +8,5 @@ RUN bundle install
 
 COPY . .
 
-CMD ["./bin/pharos-cluster"]
+WORKDIR /tmp
+ENTRYPOINT ["/app/bin/pharos-cluster"]
