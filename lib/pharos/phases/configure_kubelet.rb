@@ -89,6 +89,11 @@ module Pharos
       def build_systemd_dropin
         options = []
         options << "Environment='KUBELET_EXTRA_ARGS=#{kubelet_extra_args.join(' ')}'"
+
+        @host.environment.each do |var, value|
+            options << "Environment='#{var}=#{value}'"
+        end
+
         options << "ExecStartPre=-/sbin/swapoff -a"
 
         "[Service]\n#{options.join("\n")}\n"
