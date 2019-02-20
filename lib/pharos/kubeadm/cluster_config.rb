@@ -45,6 +45,7 @@ module Pharos
           },
           'controllerManagerExtraArgs' => {
             'horizontal-pod-autoscaler-use-rest-clients' => 'true',
+            'controllers' => '*,bootstrapsigner,tokencleaner,-route',
             'profiling' => 'false', # CIS 1.2.1
             'terminated-pod-gc-threshold' => '1000' # CIS 1.3.1
           },
