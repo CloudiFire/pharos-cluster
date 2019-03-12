@@ -11,6 +11,8 @@ module Pharos
 
     EXPORT_ENVS = {
       http_proxy: '$http_proxy',
+      https_proxy: '$https_proxy',
+      no_proxy: '$no_proxy',
       HTTP_PROXY: '$HTTP_PROXY',
       HTTPS_PROXY: '$HTTPS_PROXY',
       NO_PROXY: '$NO_PROXY',
