@@ -1,4 +1,4 @@
-FROM ruby:2.4.3
+FROM ruby:2.5
 
 WORKDIR /app
 
@@ -8,4 +8,5 @@ RUN bundle install
 
 COPY . .
 
-CMD ["./bin/pharos-cluster"]
+WORKDIR /tmp
+ENTRYPOINT ["/app/bin/pharos-cluster"]
