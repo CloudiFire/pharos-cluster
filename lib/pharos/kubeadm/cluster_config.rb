@@ -48,6 +48,7 @@ module Pharos
           'controlPlaneEndpoint' => 'localhost:6443', # client-side loadbalanced kubelets
           'controllerManager' => {
             'extraArgs' => {
+              'controllers' => '*,bootstrapsigner,tokencleaner,-route',
               'horizontal-pod-autoscaler-use-rest-clients' => 'true',
               'profiling' => 'false', # CIS 1.2.1
               'terminated-pod-gc-threshold' => '1000' # CIS 1.3.1
